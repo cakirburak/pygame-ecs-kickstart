@@ -1,0 +1,4 @@
+.mypy_cache/
+game_env/
+
+.DS_Store
