@@ -3,8 +3,9 @@ from entity_manager import EntityManager
 
 class Game:
     def __init__(self, base_res_w, base_res_h):
-        self.screen = pg.Surface
-        self.render_window = pg.Rect
+        self.screen_surface = pg.Surface
+        self.render_surface = pg.Surface
+        self.render_surface_rect = pg.Rect
         self.render_scale = 1
         self.game_res = 16/9
 
@@ -26,27 +27,25 @@ class Game:
         # set render window and render scale
         if display_res == self.game_res:
             print("FullScreen")
-            self.render_window = pg.Rect(0,0, display_info.current_w, display_info.current_h) 
+            self.render_surface_rect = pg.Rect(0,0, display_info.current_w, display_info.current_h) 
             self.render_scale = display_info.current_w / base_res_w
         elif display_res < self.game_res:
-            self.render_window = pg.Rect( 0, int((display_info.current_h - display_info.current_w*(9/16))/2 ), display_info.current_w, display_info.current_w*(9/16),) 
+            self.render_surface_rect = pg.Rect( 0, int((display_info.current_h - display_info.current_w*(9/16))/2 ), display_info.current_w, display_info.current_w*(9/16),) 
             self.render_scale = display_info.current_w / base_res_w
             print("User Display is Higher")
         else:
-            self.render_window = pg.Rect(int((display_info.current_w - display_info.current_h*(16/9))/2), 0, display_info.current_h*(16/9), display_info.current_h) 
+            self.render_surface_rect = pg.Rect(int((display_info.current_w - display_info.current_h*(16/9))/2), 0, display_info.current_h*(16/9), display_info.current_h) 
             self.render_scale = display_info.current_h / base_res_h
             print("User Display is Wider")
 
         # set screen
-        self.screen = pg.display.set_mode((display_info.current_w, display_info.current_h), flags=pg.FULLSCREEN | pg.NOFRAME)
+        self.screen_surface = pg.display.set_mode((display_info.current_w, display_info.current_h), flags=pg.FULLSCREEN | pg.NOFRAME)
+        self.render_surface = pg.Surface((self.render_surface_rect.width, self.render_surface_rect.height))
 
         # testing entity manager
-        entity = self.e_manager.add_entity("background")
-        entity.c_transform(pg.Vector2(0+self.render_window.x, 0+self.render_window.y))
-        entity.c_shape(pg.Vector2(640*self.render_scale, 360*self.render_scale), pg.Color(0, 0, 255))
         entity2 = self.e_manager.add_entity("player")
-        entity2.c_transform(pg.Vector2(0+self.render_window.x, 0+self.render_window.y), pg.Vector2(2, 1), 1)
-        entity2.c_shape(pg.Vector2(32*self.render_scale, 32*self.render_scale), pg.Color(255, 0, 0))
+        entity2.c_transform(pg.Vector2(0, 0), pg.Vector2(2, 2), 1)
+        entity2.c_shape(pg.Vector2(16*self.render_scale, 16*self.render_scale), pg.Color(255, 0, 0))
 
     def run(self):
         clock = pg.time.Clock()
@@ -67,12 +66,12 @@ class Game:
             e.c_transform.pos += e.c_transform.velocity
 
     def s_render(self):
-        pg.Surface.fill(self.screen, "black")
-        for e in self.e_manager.get_entities("background"):
-            pg.draw.rect(self.screen, e.c_shape.fill_color, pg.Rect(e.c_transform.pos.x, e.c_transform.pos.y, e.c_shape.size.x, e.c_shape.size.y))
+        pg.Surface.fill(self.screen_surface, "black")
+        pg.Surface.blit(self.screen_surface, self.render_surface, (self.render_surface_rect.x, self.render_surface_rect.y))
+        pg.Surface.fill(self.render_surface, "blue")
         
         for e in self.e_manager.get_entities("player"):
-            pg.draw.rect(self.screen, e.c_shape.fill_color, pg.Rect(e.c_transform.pos.x, e.c_transform.pos.y, e.c_shape.size.x, e.c_shape.size.y))
+            pg.draw.rect(self.render_surface, e.c_shape.fill_color, pg.Rect(e.c_transform.pos.x, e.c_transform.pos.y, e.c_shape.size.x, e.c_shape.size.y))
 
         pg.display.flip()
 
